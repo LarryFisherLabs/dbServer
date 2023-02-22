@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import Ants from "../contracts/Ants.json" assert { type: 'json' };
+import Ants from "../contracts/Ants.json";
 import { createAntPicture } from "../helpers/canvas.js";
 
 const contractAddress = Ants.address;
