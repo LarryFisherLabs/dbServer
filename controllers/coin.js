@@ -17,7 +17,7 @@ export const getCoinImage = async (req, res, next) => {
         } else if (coinId < count) {
             res.contentType('image/png');
             const coin = await contract.getCoin(coinId);
-            const coinBuffer = await createPicture(coinId, ethers.utils.formatEther(coin[0]), parseInt(coin[1]));
+            const coinBuffer = await createPicture(coinId, parseFloat(ethers.utils.formatEther(coin[0])).toString(), parseInt(coin[1]));
             res.send(coinBuffer)
         } else {
             res.json({message: "Coin not found!"});
