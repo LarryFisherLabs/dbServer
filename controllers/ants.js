@@ -1,25 +1,73 @@
-import { ethers } from "ethers";
-import Ants from "../contracts/Ants.json";
+import { staticLayerInfo } from "../helpers/antInfo.js";
 import { createAntPicture } from "../helpers/canvas.js";
+import { getContract } from "../helpers/ethers.js";
+import { convertFileName } from "../helpers/helpers.js";
 
-const contractAddress = Ants.address;
+// !!! network ids !!!
+// 0 sepolia
+// 1 goerli
+
+const getAntDeets = (name, host, netId, tokenId, attributes, rarities) => {
+    let antDeets = {};
+    antDeets["name"] = name;
+    antDeets["description"] = "Ants will receive descriptions from creators based on traits over time.";
+    antDeets["image"] = host + "/" + netId + "/ants/images/" + tokenId;
+    antDeets["attributes"] = [];
+    let rarityScore = 0;
+    for (let i = 0; i < 15; i++) {
+        const layer = staticLayerInfo[i];
+        const layerName = convertFileName(layer.fileName);
+        const partName = convertFileName(layer.elements[attributes[i]].name);
+        
+        antDeets["attributes"].push({
+            "trait_type": layerName,
+            "value": partName
+        });
+        antDeets["attributes"].push({
+            "trait_type": layerName + " Rarity",
+            "value": rarities[i]
+        });
+        rarityScore += rarities[i];
+    }
+    antDeets["attributes"].push({
+        "trait_type": "Total Rarity Score",
+        "value": rarityScore
+    });
+    return antDeets;
+}
+
+export const getAnt = async (req, res, next) => {
+    try {
+        const antId = parseInt(req.params.id);
+        // returns string for bad request or contract object on good request
+        const result = await getContract(parseInt(req.params.netId), 1, antId);
+
+        if (typeof result === "string") {
+            res.json({message: result});
+        } else {
+            const ant = await result.getAnt(antId);
+            const antName = ant[2] === "" ? "Larry" : ant[2];
+            const antDeets = getAntDeets(antName, req.hostname, req.params.netId, req.params.id, ant[0].map((partIndex) => parseInt(partIndex)), ant[1].map((partRarity) => parseInt(partRarity)));
+            res.json(antDeets)
+        }
+    } catch(err) {
+        next(err);
+    }
+}
 
 export const getAntImage = async (req, res, next) => {
     try {
         const antId = parseInt(req.params.id);
-        const provider = new ethers.providers.InfuraProvider("sepolia", process.env.INFURA_API_KEY);
-        const contract = new ethers.Contract(contractAddress, Ants.abi, provider);
-        const count = parseInt(await contract.COUNTER());
+        // returns string for bad request or contract object on good request
+        const result = await getContract(parseInt(req.params.netId), 1, antId);
 
-        if (count < 1) {
-            res.json({message: "No ants yet"});
-        } else if (antId < count) {
+        if (typeof result === "string") {
+            res.json({message: result});
+        } else {
             res.contentType('image/png');
-            const ant = await contract.getAnt(antId);
+            const ant = await result.getAnt(antId);
             const antBuffer = await createAntPicture(antId, ant[0].map((partIndex) => parseInt(partIndex)));
             res.send(antBuffer)
-        } else {
-            res.json({message: "Ant not found!"});
         }
     } catch(err) {
         next(err);

@@ -1,26 +1,59 @@
 import { ethers } from "ethers";
-import Coins from "../contracts/Coins.json";
 import { createPicture } from "../helpers/canvas.js";
+import { getContract } from "../helpers/ethers.js";
 
-const contractAddress = Coins.address;
+// !!! network ids !!!
+// 0 sepolia
+// 1 goerli
+
+const getCoinDeets = (host, netId, tokenId, colorId, value) => {
+    let coinDeets = {};
+    coinDeets["description"] = "This token represents membership in the bitcow arcade community. Each token offers a one time discount on every current and future NFT project released by the bitcow arcade team as well as additional perks in any games created by our team.";
+    coinDeets["image"] = host + "/" + netId + "/coins/images/" + tokenId;
+    coinDeets["attributes"] = [];
+    const color = colorId === 4 ? "Founder" : colorId === 1 ? "Silver" : colorId === 2 ? "Gold" : colorId === 3 ? "Diamond" : "Bronze";
+    coinDeets["attributes"].push({
+        "trait_type": "Coin Tier",
+        "value": color
+    });
+    coinDeets["attributes"].push({
+        "trait_type": "Value",
+        "value": value
+    });
+    return coinDeets;
+}
+
+export const getCoin = async (req, res, next) => {
+    try {
+        const coinId = parseInt(req.params.id);
+        // returns string for bad request or contract object on good request
+        const result = await getContract(parseInt(req.params.netId), 0, coinId);
+
+        if (typeof result === "string") {
+            res.json({message: result});
+        } else {
+            const coin = await result.getCoin(coinId);
+            const coinDeets = getCoinDeets(req.hostname, req.params.netId, req.params.id, parseInt(coin[1]), parseFloat(ethers.utils.formatEther(coin[0])).toString());
+            res.json(coinDeets)
+        }
+    } catch(err) {
+        next(err);
+    }
+}
 
 export const getCoinImage = async (req, res, next) => {
     try {
         const coinId = parseInt(req.params.id);
-        const provider = new ethers.providers.InfuraProvider("sepolia", process.env.INFURA_API_KEY);
-        const contract = new ethers.Contract(contractAddress, Coins.abi, provider);
-        const counters = await contract.getCounters()
-        const count = parseInt(counters[0]);
+        // returns string for bad request or contract object on good request
+        const result = await getContract(parseInt(req.params.netId), 0, coinId);
 
-        if (count < 1) {
-            res.json({message: "No Coins yet"});
-        } else if (coinId < count) {
+        if (typeof result === "string") {
+            res.json({message: result});
+        } else {
             res.contentType('image/png');
-            const coin = await contract.getCoin(coinId);
+            const coin = await result.getCoin(coinId);
             const coinBuffer = await createPicture(coinId, parseFloat(ethers.utils.formatEther(coin[0])).toString(), parseInt(coin[1]));
             res.send(coinBuffer)
-        } else {
-            res.json({message: "Coin not found!"});
         }
     } catch(err) {
         next(err);
