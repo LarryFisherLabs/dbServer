@@ -1,5 +1,5 @@
-import Ants from "../contracts/Ants.json" assert { type: 'json' };
-import Coins from "../contracts/Coins.json" assert { type: 'json' };
+import Ants from "../contracts/Ants.json";
+import Coins from "../contracts/Coins.json";
 import { ethers } from "ethers";
 
 // !!! network ids !!!
