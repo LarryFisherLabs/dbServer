@@ -2,6 +2,8 @@ import Ants from "../contracts/Ants.json";
 import Coins from "../contracts/Coins.json";
 import { ethers } from "ethers";
 
+// for local testing assert { type: 'json' }
+
 // !!! network ids !!!
 // 0 sepolia
 // 1 goerli
@@ -32,7 +34,8 @@ export const getContract = async (networkId, contractId, tokenId) => {
         return "Invalid network!";
     } else {
         const provider = new ethers.providers.InfuraProvider(netDeets[networkId].name, process.env.INFURA_API_KEY);
-        const contract = new ethers.Contract(netDeets[networkId].contracts[contractId], Coins.abi, provider);
+        const abi = contractId === 0 ? Coins.abi : Ants.abi
+        const contract = new ethers.Contract(netDeets[networkId].contracts[contractId], abi, provider);
         const count = contractId === 0 ? await getCoinCount(contract) : parseInt(await contract.COUNTER());
         if (count < 1) {
             return "No tokens yet";
