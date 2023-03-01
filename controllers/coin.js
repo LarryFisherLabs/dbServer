@@ -9,7 +9,7 @@ import { getContract } from "../helpers/ethers.js";
 const getCoinDeets = (host, netId, tokenId, colorId, value) => {
     let coinDeets = {};
     coinDeets["description"] = "This token represents membership in the bitcow arcade community. Each token offers a one time discount on every current and future NFT project released by the bitcow arcade team as well as additional perks in any games created by our team.";
-    coinDeets["image"] = host + "/" + netId + "/coins/images/" + tokenId;
+    coinDeets["image"] = "https://" + host + "/" + netId + "/coins/images/" + tokenId;
     coinDeets["attributes"] = [];
     const color = colorId === 4 ? "Founder" : colorId === 1 ? "Silver" : colorId === 2 ? "Gold" : colorId === 3 ? "Diamond" : "Bronze";
     coinDeets["attributes"].push({
