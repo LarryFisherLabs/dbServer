@@ -11,7 +11,7 @@ const getAntDeets = (name, host, netId, tokenId, attributes, rarities) => {
     let antDeets = {};
     antDeets["name"] = name;
     antDeets["description"] = "Ants will receive descriptions from creators based on traits over time.";
-    antDeets["image"] = host + "/" + netId + "/ants/images/" + tokenId;
+    antDeets["image"] = "https://" + host + "/" + netId + "/ants/images/" + tokenId;
     antDeets["attributes"] = [];
     let rarityScore = 0;
     for (let i = 0; i < 15; i++) {
