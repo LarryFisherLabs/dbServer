@@ -17,8 +17,8 @@ const getCoinDeets = (host, netId, tokenId, colorId, value) => {
         "value": color
     });
     coinDeets["attributes"].push({
-        "trait_type": "Value",
-        "value": value
+        "trait_type": "Coin Value",
+        "value": parseFloat(value)
     });
     return coinDeets;
 }

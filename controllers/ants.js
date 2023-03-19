@@ -14,20 +14,24 @@ const getAntDeets = (name, host, netId, tokenId, attributes, rarities) => {
     antDeets["image"] = "https://" + host + "/" + netId + "/ants/images/" + tokenId;
     antDeets["attributes"] = [];
     let rarityScore = 0;
+    // i === layerLevel
     for (let i = 0; i < 15; i++) {
         const layer = staticLayerInfo[i];
         const layerName = convertFileName(layer.fileName);
         const partName = convertFileName(layer.elements[attributes[i]].name);
         
-        antDeets["attributes"].push({
-            "trait_type": layerName,
-            "value": partName
-        });
-        antDeets["attributes"].push({
-            "trait_type": layerName + " Rarity",
-            "value": rarities[i]
-        });
-        rarityScore += rarities[i];
+        // don't include metadata for blank sections or base element for antenna, arm or leg
+        if (rarities[i] !== 0 || i === 7 || i === 9 || i === 14) {
+            antDeets["attributes"].push({
+                "trait_type": layerName,
+                "value": partName
+            });
+            antDeets["attributes"].push({
+                "trait_type": layerName + " Rarity",
+                "value": rarities[i]
+            });
+            rarityScore += rarities[i];
+        }
     }
     antDeets["attributes"].push({
         "trait_type": "Total Rarity Score",
@@ -66,7 +70,7 @@ export const getAntImage = async (req, res, next) => {
         } else {
             res.contentType('image/png');
             const ant = await result.getAnt(antId);
-            const antBuffer = await createAntPicture(antId, ant[0].map((partIndex) => parseInt(partIndex)));
+            const antBuffer = await createAntPicture(ant[0].map((partIndex) => parseInt(partIndex)));
             res.send(antBuffer)
         }
     } catch(err) {
