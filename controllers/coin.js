@@ -94,3 +94,21 @@ export const getOwnersCoins = async (req, res, next) => {
         next(err);
     }
 }
+
+export const getCoinOwner = async (req, res, next) => {
+    try {
+        const coinId = req.params.coinId;
+        const netId = parseInt(req.params.netId);
+        // returns string for bad request or contract object on good request
+        const result = await getContract(netId, 0, coinId);
+
+        if (typeof result === "string") {
+            res.json({message: result});
+        } else {
+            const owner = await result.ownerOf(coinId);
+            res.json({ 'owner': owner.toLowerCase() });
+        }
+    } catch(err) {
+        next(err);
+    }
+}
