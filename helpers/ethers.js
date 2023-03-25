@@ -1,5 +1,6 @@
 import fs from "fs";
 import { ethers } from "ethers";
+import { isAddress } from "ethers/lib/utils.js";
 
 // !!! network ids !!!
 // 0 sepolia
@@ -36,21 +37,28 @@ const netDeets = [
     }
 ];
 
-const getCoinCount = async (contract) => {
+export const _getAntCount = async (contract) => {
+    return parseInt(await contract.COUNTER());
+}
+
+export const _getCoinCount = async (contract) => {
     const counters = await contract.getCounters();
     return parseInt(counters[0]);
 }
 
 // string returned means bad request non-string(contract) means proceed
-export const getContract = async (networkId, contractId, tokenId) => {
+export const getContract = async (networkId, contractId, tokenId, isIgnoringTokenId = false) => {
     if (typeof Coins === "string" && contractId === 0) return Coins
     else if (typeof Ants === "string" && contractId ===1) return Ants
     else if (isNaN(networkId) || parseInt(networkId) >= netDeets.length || parseInt(networkId) < 0) return "Invalid network!";
     else {
         const provider = new ethers.providers.InfuraProvider(netDeets[networkId].name, process.env.INFURA_API_KEY);
-        const abi = contractId === 0 ? Coins.abi : Ants.abi
+        const abi = contractId === 0 ? Coins.abi : Ants.abi;
         const contract = new ethers.Contract(netDeets[networkId].contracts[contractId], abi, provider);
-        const count = contractId === 0 ? await getCoinCount(contract) : parseInt(await contract.COUNTER());
+        if (isIgnoringTokenId) {
+            return contract;
+        }
+        const count = contractId === 0 ? await _getCoinCount(contract) : await _getAntCount(contract);
         if (count < 1) {
             return "No tokens yet";
         } else if (tokenId < count) {
@@ -59,4 +67,32 @@ export const getContract = async (networkId, contractId, tokenId) => {
             return "Token not found!";
         }
     }
+}
+
+export const getNftIdsByOwner = async (contract, ownerAddress) => {
+    if (!isAddress(ownerAddress)) return `is address: ${isAddress(ownerAddress)}, address: ${ownerAddress}`;
+    const balance = await contract.balanceOf(ownerAddress);
+    let nftIds = [];
+    if (balance > 0) {
+        const transferLogs = await contract.queryFilter(contract.filters.Transfer(null, ownerAddress));
+        for (let i = 0; i < transferLogs.length; i++) {
+            // get the indexed id 
+            const id = parseInt(transferLogs[i].args[2]);
+            if (!nftIds.includes(id)) {
+                nftIds.push(id);
+            }
+        }
+        if (nftIds.length > balance) {
+            for (let i = 0; i < nftIds.length; i++) {
+                const owner = await contract.ownerOf(nftIds[i]);
+                if (owner !== ownerAddress) {
+                    nftIds.splice(i, 1);
+                }
+                if (nftIds.length === balance) {
+                    i = nftIds.length;
+                }
+            }
+        }
+    }
+    return nftIds;
 }

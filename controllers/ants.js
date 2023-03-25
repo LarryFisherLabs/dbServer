@@ -1,6 +1,6 @@
 import { staticLayerInfo } from "../helpers/antInfo.js";
 import { createAntPicture } from "../helpers/canvas.js";
-import { getContract } from "../helpers/ethers.js";
+import { getContract, getNftIdsByOwner, _getAntCount } from "../helpers/ethers.js";
 import { convertFileName } from "../helpers/helpers.js";
 
 // !!! network ids !!!
@@ -38,6 +38,22 @@ const getAntDeets = (name, host, netId, tokenId, attributes, rarities) => {
         "value": rarityScore
     });
     return antDeets;
+}
+
+export const getAntCount = async (req, res, next) => {
+    try {
+        // returns string for bad request or contract object on good request
+        const result = await getContract(parseInt(req.params.netId), 1, 0);
+
+        if (typeof result === "string") {
+            res.json({message: result});
+        } else {
+            const count = await _getAntCount(result)
+            res.json({ 'count': count })
+        }
+    } catch(err) {
+        next(err);
+    }
 }
 
 export const getAnt = async (req, res, next) => {
@@ -78,36 +94,20 @@ export const getAntImage = async (req, res, next) => {
     }
 }
 
-// const imageFolder = '/Users/jeffreydouglas/Desktop/testDB/images/ants';
+export const getOwnersAnts = async (req, res, next) => {
+    try {
+        const ownerAddress = req.params.ownerAddress.toLowerCase();
+        const netId = parseInt(req.params.netId);
+        // returns string for bad request or contract object on good request
+        const result = await getContract(netId, 1, null, true);
 
-// const updateImageRepo = async () => {
-//     const provider = new ethers.providers.InfuraProvider("sepolia", process.env.INFURA_API_KEY);
-//     const contract = new ethers.Contract(contractAddress, Ants.abi, provider);
-//     const counter = await contract.COUNTER()
-//     const count = parseInt(counter);
-//     for (let i = 0; i < count; i++) {
-//         if (!fs.existsSync(imageFolder + '/' + i)) {
-//             const ant = await contract.getAnt(i);
-//             await createAntPicture(i, ant[0].map((partIndex) => parseInt(partIndex)));
-//         }
-//     }
-// }
-
-// export const getAntImage = async (req, res, next) => {
-//     try {
-//         await updateImageRepo();
-//         const antId = parseInt(req.params.id);
-//         if (!fs.existsSync(imageFolder + '/0')) {
-//             res.json({message: "No ants yet"});
-//         } else {
-//             if (fs.existsSync(imageFolder + '/' + antId)) {
-//                 res.contentType('image/png');
-//                 fs.createReadStream(imageFolder + '/' + antId).pipe(res)
-//             } else {
-//                 res.json({message: "Ant not found!"});
-//             }
-//         }
-//     } catch(err) {
-//         next(err);
-//     }
-// }
+        if (typeof result === "string") {
+            res.json({message: result});
+        } else {
+            const ids = await getNftIdsByOwner(result, ownerAddress);
+            res.json({ 'ids': ids });
+        }
+    } catch(err) {
+        next(err);
+    }
+}
