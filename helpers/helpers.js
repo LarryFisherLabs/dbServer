@@ -7,3 +7,14 @@ export const convertFileName = (fileName) => {
     }
     return name;
 }
+
+const requestWhiteList = [
+    'http://localhost:3000',
+    'https://nft-ui-git-wip-top-down-restructure-larryfisherlabs.vercel.app',
+    'https://nft-ui-larryfisherlabs.vercel.app'
+]
+
+export const isOnWhiteList = (origin) => {
+    if (requestWhiteList.includes(origin)) return true
+    else return false
+}

@@ -1,6 +1,6 @@
 import express from "express";
-import { getAnt, getAntCount, getAntImage, getAntOwner, getOwnersAnts } from "../controllers/ants.js";
-import { getCoin, getCoinCount, getCoinImage, getCoinOwner, getOwnersCoins } from "../controllers/coin.js";
+import { getAnt, getAntCount, getAntImage, getOwnersAnts } from "../controllers/ants.js";
+import { getCoin, getCoinCount, getCoinImage, getOwnersCoins } from "../controllers/coin.js";
 
 export const router = express.Router(); 
 
@@ -16,5 +16,3 @@ router.get('/:netId/coins/:id', getCoin);
 router.get('/:netId/ants/:id', getAnt);
 router.get('/:netId/coin-ids/:ownerAddress', getOwnersCoins);
 router.get('/:netId/ant-ids/:ownerAddress', getOwnersAnts);
-router.get('/:netId/coin-owner/:coinId', getCoinOwner);
-router.get('/:netId/ant-owner/:antId', getAntOwner);

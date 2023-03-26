@@ -7,8 +7,9 @@ import { convertFileName } from "../helpers/helpers.js";
 // 0 sepolia
 // 1 goerli
 
-const getAntDeets = (name, host, netId, tokenId, attributes, rarities) => {
+const getAntDeets = (name, host, netId, tokenId, attributes, rarities, owner) => {
     let antDeets = {};
+    antDeets["owner"] = owner.toLowerCase()
     antDeets["name"] = name;
     antDeets["description"] = "Ants will receive descriptions from creators based on traits over time.";
     antDeets["image"] = "https://" + host + "/" + netId + "/ants/images/" + tokenId;
@@ -66,8 +67,9 @@ export const getAnt = async (req, res, next) => {
             res.json({message: result});
         } else {
             const ant = await result.getAnt(antId);
+            const antOwner = await result.ownerOf(antId)
             const antName = ant[2] === "" ? "Larry" : ant[2];
-            const antDeets = getAntDeets(antName, req.hostname, req.params.netId, req.params.id, ant[0].map((partIndex) => parseInt(partIndex)), ant[1].map((partRarity) => parseInt(partRarity)));
+            const antDeets = getAntDeets(antName, req.hostname, req.params.netId, req.params.id, ant[0].map((partIndex) => parseInt(partIndex)), ant[1].map((partRarity) => parseInt(partRarity)), antOwner);
             res.json(antDeets)
         }
     } catch(err) {
@@ -106,24 +108,6 @@ export const getOwnersAnts = async (req, res, next) => {
         } else {
             const ids = await getNftIdsByOwner(result, ownerAddress);
             res.json({ 'ids': ids });
-        }
-    } catch(err) {
-        next(err);
-    }
-}
-
-export const getAntOwner = async (req, res, next) => {
-    try {
-        const antId = req.params.antId;
-        const netId = parseInt(req.params.netId);
-        // returns string for bad request or contract object on good request
-        const result = await getContract(netId, 1, antId);
-
-        if (typeof result === "string") {
-            res.json({message: result});
-        } else {
-            const owner = await result.ownerOf(antId);
-            res.json({ 'owner': owner.toLowerCase() });
         }
     } catch(err) {
         next(err);

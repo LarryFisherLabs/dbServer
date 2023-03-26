@@ -1,5 +1,4 @@
 import { ethers } from "ethers";
-import { isAddress } from "ethers/lib/utils.js";
 import { createPicture } from "../helpers/canvas.js";
 import { getContract, getNftIdsByOwner, _getCoinCount } from "../helpers/ethers.js";
 
@@ -7,8 +6,11 @@ import { getContract, getNftIdsByOwner, _getCoinCount } from "../helpers/ethers.
 // 0 sepolia
 // 1 goerli
 
-const getCoinDeets = (host, netId, tokenId, colorId, value) => {
+const getCoinDeets = (host, netId, tokenId, colorId, value, isAntDiscountUsed, owner) => {
+    if (host.includes('localhost')) host = host + ':3001'
+    const antDiscount = isAntDiscountUsed ? 'Used' : 'Available'
     let coinDeets = {};
+    coinDeets["owner"] = owner.toLowerCase()
     coinDeets["description"] = "This token represents membership in the bitcow arcade community. Each token offers a one time discount on every current and future NFT project released by the bitcow arcade team as well as additional perks in any games created by our team.";
     coinDeets["image"] = "https://" + host + "/" + netId + "/coins/images/" + tokenId;
     coinDeets["attributes"] = [];
@@ -21,6 +23,10 @@ const getCoinDeets = (host, netId, tokenId, colorId, value) => {
         "trait_type": "Coin Value",
         "value": parseFloat(value)
     });
+    coinDeets["attributes"].push({
+        "trait_type": "Ant Discount",
+        "value": antDiscount
+    });
     return coinDeets;
 }
 
@@ -28,7 +34,7 @@ export const getCoinCount = async (req, res, next) => {
     try {
         // returns string for bad request or contract object on good request
         const result = await getContract(parseInt(req.params.netId), 0, 0);
-
+       
         if (typeof result === "string") {
             res.json({message: result});
         } else {
@@ -43,14 +49,18 @@ export const getCoinCount = async (req, res, next) => {
 export const getCoin = async (req, res, next) => {
     try {
         const coinId = parseInt(req.params.id);
+        const netId = parseInt(req.params.netId)
         // returns string for bad request or contract object on good request
-        const result = await getContract(parseInt(req.params.netId), 0, coinId);
+        const result = await getContract(netId, 0, coinId);
+        const antContractResult = await getContract(netId, 1, null, true)
 
         if (typeof result === "string") {
             res.json({message: result});
         } else {
             const coin = await result.getCoin(coinId);
-            const coinDeets = getCoinDeets(req.hostname, req.params.netId, req.params.id, parseInt(coin[1]), parseFloat(ethers.utils.formatEther(coin[0])).toString());
+            const coinOwner = await result.ownerOf(coinId)
+            const isAntDiscountUsed = await antContractResult.isDiscountUsed(coinId)
+            const coinDeets = getCoinDeets(req.hostname, req.params.netId, req.params.id, parseInt(coin[1]), parseFloat(ethers.utils.formatEther(coin[0])).toString(), isAntDiscountUsed, coinOwner);
             res.json(coinDeets)
         }
     } catch(err) {
@@ -89,24 +99,6 @@ export const getOwnersCoins = async (req, res, next) => {
         } else {
             const ids = await getNftIdsByOwner(result, ownerAddress);
             res.json({ 'ids': ids });
-        }
-    } catch(err) {
-        next(err);
-    }
-}
-
-export const getCoinOwner = async (req, res, next) => {
-    try {
-        const coinId = req.params.coinId;
-        const netId = parseInt(req.params.netId);
-        // returns string for bad request or contract object on good request
-        const result = await getContract(netId, 0, coinId);
-
-        if (typeof result === "string") {
-            res.json({message: result});
-        } else {
-            const owner = await result.ownerOf(coinId);
-            res.json({ 'owner': owner.toLowerCase() });
         }
     } catch(err) {
         next(err);
