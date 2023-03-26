@@ -7,12 +7,13 @@ import { getContract, getNftIdsByOwner, _getCoinCount } from "../helpers/ethers.
 // 1 goerli
 
 const getCoinDeets = (host, netId, tokenId, colorId, value, isAntDiscountUsed, owner) => {
-    if (host.includes('localhost')) host = host + ':3001'
+    if (host.includes('localhost')) host = 'http://' + host + ':3001'
+    else host = 'https://' + host
     const antDiscount = isAntDiscountUsed ? 'Used' : 'Available'
     let coinDeets = {};
     coinDeets["owner"] = owner.toLowerCase()
     coinDeets["description"] = "This token represents membership in the bitcow arcade community. Each token offers a one time discount on every current and future NFT project released by the bitcow arcade team as well as additional perks in any games created by our team.";
-    coinDeets["image"] = "https://" + host + "/" + netId + "/coins/images/" + tokenId;
+    coinDeets["image"] = host + "/" + netId + "/coins/images/" + tokenId;
     coinDeets["attributes"] = [];
     const color = colorId === 4 ? "Founder" : colorId === 1 ? "Silver" : colorId === 2 ? "Gold" : colorId === 3 ? "Diamond" : "Bronze";
     coinDeets["attributes"].push({

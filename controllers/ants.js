@@ -8,11 +8,13 @@ import { convertFileName } from "../helpers/helpers.js";
 // 1 goerli
 
 const getAntDeets = (name, host, netId, tokenId, attributes, rarities, owner) => {
+    if (host.includes('localhost')) host = 'http://' + host + ':3001'
+    else host = 'https://' + host
     let antDeets = {};
     antDeets["owner"] = owner.toLowerCase()
     antDeets["name"] = name;
     antDeets["description"] = "Ants will receive descriptions from creators based on traits over time.";
-    antDeets["image"] = "https://" + host + "/" + netId + "/ants/images/" + tokenId;
+    antDeets["image"] = host + "/" + netId + "/ants/images/" + tokenId;
     antDeets["attributes"] = [];
     let rarityScore = 0;
     // i === layerLevel
