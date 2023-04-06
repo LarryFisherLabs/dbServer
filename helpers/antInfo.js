@@ -333,12 +333,12 @@ const leftForeleg = [
     {
         name: '0-prosthetic-left-foreleg',
         rarity: 4,
-        layerLevel: 5,
+        layerLevel: 1,
     },
     {
         name: '1-ant-left-foreleg',
         rarity: 0,
-        layerLevel: 5,
+        layerLevel: 1,
     }
 ]
 
