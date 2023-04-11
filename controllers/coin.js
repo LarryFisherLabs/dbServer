@@ -33,8 +33,10 @@ const getCoinDeets = (host, netId, tokenId, colorId, value, isAntDiscountUsed, o
 
 export const getCoinCount = async (req, res, next) => {
     try {
+        const passedNetId = parseInt(req.params.netId)
+        const netId = passedNetId === 5 ? 1 : passedNetId === 11155111 ? 0 : null
         // returns string for bad request or contract object on good request
-        const result = await getContract(parseInt(req.params.netId), 0, 0);
+        const result = await getContract(parseInt(netId), 0, 0);
        
         if (typeof result === "string") {
             res.json({message: result});
@@ -50,7 +52,8 @@ export const getCoinCount = async (req, res, next) => {
 export const getCoin = async (req, res, next) => {
     try {
         const coinId = parseInt(req.params.id);
-        const netId = parseInt(req.params.netId)
+        const passedNetId = parseInt(req.params.netId)
+        const netId = passedNetId === 5 ? 1 : passedNetId === 11155111 ? 0 : null
         // returns string for bad request or contract object on good request
         const result = await getContract(netId, 0, coinId);
         const antContractResult = await getContract(netId, 1, null, true)
@@ -72,8 +75,10 @@ export const getCoin = async (req, res, next) => {
 export const getCoinImage = async (req, res, next) => {
     try {
         const coinId = parseInt(req.params.id);
+        const passedNetId = parseInt(req.params.netId)
+        const netId = passedNetId === 5 ? 1 : passedNetId === 11155111 ? 0 : null
         // returns string for bad request or contract object on good request
-        const result = await getContract(parseInt(req.params.netId), 0, coinId);
+        const result = await getContract(parseInt(netId), 0, coinId);
 
         if (typeof result === "string") {
             res.json({message: result});
@@ -91,7 +96,8 @@ export const getCoinImage = async (req, res, next) => {
 export const getOwnersCoins = async (req, res, next) => {
     try {
         const ownerAddress = req.params.ownerAddress.toLowerCase();
-        const netId = parseInt(req.params.netId);
+        const passedNetId = parseInt(req.params.netId)
+        const netId = passedNetId === 5 ? 1 : passedNetId === 11155111 ? 0 : null
         // returns string for bad request or contract object on good request
         const result = await getContract(netId, 0, null, true);
 
