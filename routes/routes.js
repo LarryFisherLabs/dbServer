@@ -4,12 +4,12 @@ import { getTokenCount, getTokenIdsByOwner, getTokenImage, getTokenMetadata } fr
 export const router = express.Router(); 
 
 // !!! network ids !!!
-// 0 sepolia
-// 1 goerli
+// passed: 11155111, in-project: 0, desc: sepolia
+// passed: 5, in-project: 1, desc: goerli
 
 // !!! token type !!!
-// 'coins' arcade tokens
-// 'ants' army ants tokens
+// passed: 'coins', in-project: 0, desc: arcade tokens
+// passed: 'ants', in-project: 1, desc: army ants tokens
 
 router.get('/count/:netId/:tokenType', getTokenCount);
 router.get('/images/:netId/:tokenType/:id', getTokenImage);
