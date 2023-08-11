@@ -48,7 +48,7 @@ export const getAntCount = async (req, res, next) => {
         const passedNetId = parseInt(req.params.netId)
         const netId = passedNetId === 5 ? 1 : passedNetId === 11155111 ? 0 : null
         // returns string for bad request or contract object on good request
-        const result = await getContract(parseInt(netId), 1, 0);
+        const result = await getContract(netId, 1, 0);
 
         if (typeof result === "string") {
             res.json({message: result});
@@ -67,7 +67,7 @@ export const getAnt = async (req, res, next) => {
         const passedNetId = parseInt(req.params.netId)
         const netId = passedNetId === 5 ? 1 : passedNetId === 11155111 ? 0 : null
         // returns string for bad request or contract object on good request
-        const result = await getContract(parseInt(netId), 1, antId);
+        const result = await getContract(netId, 1, antId);
 
         if (typeof result === "string") {
             res.json({message: result});
@@ -89,7 +89,7 @@ export const getAntImage = async (req, res, next) => {
         const passedNetId = parseInt(req.params.netId)
         const netId = passedNetId === 5 ? 1 : passedNetId === 11155111 ? 0 : null
         // returns string for bad request or contract object on good request
-        const result = await getContract(parseInt(netId), 1, antId);
+        const result = await getContract(netId, 1, antId);
 
         if (typeof result === "string") {
             res.json({message: result});

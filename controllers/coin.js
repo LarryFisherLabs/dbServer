@@ -36,7 +36,7 @@ export const getCoinCount = async (req, res, next) => {
         const passedNetId = parseInt(req.params.netId)
         const netId = passedNetId === 5 ? 1 : passedNetId === 11155111 ? 0 : null
         // returns string for bad request or contract object on good request
-        const result = await getContract(parseInt(netId), 0, 0);
+        const result = await getContract(netId, 0, 0);
        
         if (typeof result === "string") {
             res.json({message: result});
@@ -78,7 +78,7 @@ export const getCoinImage = async (req, res, next) => {
         const passedNetId = parseInt(req.params.netId)
         const netId = passedNetId === 5 ? 1 : passedNetId === 11155111 ? 0 : null
         // returns string for bad request or contract object on good request
-        const result = await getContract(parseInt(netId), 0, coinId);
+        const result = await getContract(netId, 0, coinId);
 
         if (typeof result === "string") {
             res.json({message: result});
