@@ -1,6 +1,5 @@
 import express from "express";
-import { getAnt, getAntCount, getAntImage, getOwnersAnts } from "../controllers/ants.js";
-import { getCoin, getCoinCount, getCoinImage, getOwnersCoins } from "../controllers/coin.js";
+import { getTokenCount, getTokenIdsByOwner, getTokenImage, getTokenMetadata } from "../controllers/controller.js";
 
 export const router = express.Router(); 
 
@@ -8,11 +7,11 @@ export const router = express.Router();
 // 0 sepolia
 // 1 goerli
 
-router.get('/:netId/coins/count', getCoinCount);
-router.get('/:netId/ants/count', getAntCount);
-router.get('/:netId/coins/images/:id', getCoinImage);
-router.get('/:netId/ants/images/:id', getAntImage);
-router.get('/:netId/coins/:id', getCoin);
-router.get('/:netId/ants/:id', getAnt);
-router.get('/:netId/coin-ids/:ownerAddress', getOwnersCoins);
-router.get('/:netId/ant-ids/:ownerAddress', getOwnersAnts);
+// !!! token type !!!
+// 'coins' arcade tokens
+// 'ants' army ants tokens
+
+router.get('/count/:netId/:tokenType', getTokenCount);
+router.get('/images/:netId/:tokenType/:id', getTokenImage);
+router.get('/metadata/:netId/:tokenType/:id', getTokenMetadata);
+router.get('/token-ids-by-owner/:netId/:tokenType/:ownerAddress', getTokenIdsByOwner);
