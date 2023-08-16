@@ -1,3 +1,4 @@
+import { Storage } from "@google-cloud/storage";
 import { staticLayerInfo } from "./antInfo.js";
 
 export const convertFileName = (fileName) => {
@@ -81,4 +82,45 @@ export const getAntDeets = (name, host, netId, tokenId, attributes, rarities, ow
         "value": rarityScore
     });
     return antDeets;
+}
+
+const getTokenPathInDb = (netId, tokenTypeId, tokenId) => {
+    let folderName = ''
+    if (netId === 0) folderName += 'sepolia'
+    else if (netId === 1) folderName += 'goerli'
+    else return 'Wrong network!'
+    if (tokenTypeId === 0) folderName += '-coins-images/'
+    else if (tokenTypeId === 1) folderName += '-ants-images/'
+    else return 'Collection not found!'
+    return folderName + tokenId + '.png'
+}
+
+export const getImgFromDb = async (netId, tokenTypeId, tokenId) => {
+    const tokenPath = getTokenPathInDb(netId, tokenTypeId, tokenId)
+
+    const storage = new Storage({
+        keyFilename: 'key.json'
+    })
+    const bucket = storage.bucket('ant-test-1')
+    const tokenFile = bucket.file(tokenPath)
+    const isImgPres = await tokenFile.exists()
+    if (isImgPres[0] === true) return await tokenFile.download()
+    else return 'Token not found!'
+}
+
+export const storeImgInDb = (netId, tokenTypeId, tokenId, imgBuffer) => {
+    const tokenPath = getTokenPathInDb(netId, tokenTypeId, tokenId)
+
+    const storage = new Storage({
+        keyFilename: 'key.json'
+    })
+    const bucket = storage.bucket('ant-test-1')
+    const newFile = bucket.file(tokenPath)
+    newFile.save(imgBuffer, (err) => {
+        if (!err) {
+            console.log("cool")
+        } else {
+            console.log("error " + err)
+        }
+    })
 }

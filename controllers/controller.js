@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
 import { createAntPicture, createPicture } from "../helpers/canvas.js";
 import { _getAntCount, _getCoinCount, getContract, getNftIdsByOwner } from "../helpers/ethers.js";
-import { getAntDeets, getCoinDeets } from "../helpers/helpers.js";
+import { getAntDeets, getCoinDeets, getImgFromDb, storeImgInDb } from "../helpers/helpers.js";
 
 export const getTokenCount = async (req, res, next) => {
     try {
@@ -29,15 +29,24 @@ export const getTokenImage = async (req, res, next) => {
         const netId = passedNetId === 5 ? 1 : passedNetId === 11155111 ? 0 : null
         const collectionId = req.params.tokenType === 'coins' ? 0 : req.params.tokenType === 'ants' ? 1 : null
 
-        // returns string for bad request or contract object on good request
-        const result = await getContract(netId, collectionId, tokenId);
-        if (typeof result === "string") {
+        const dbResponse = await getImgFromDb(netId, collectionId, tokenId)
+        if (typeof dbResponse === "string" && dbResponse !== 'Token not found!') {
             res.json({message: result});
+        } else if (dbResponse === 'Token not found!') {
+            // returns string for bad request or contract object on good request
+            const result = await getContract(netId, collectionId, tokenId);
+            if (typeof result === "string") {
+                res.json({message: result});
+            } else {
+                res.contentType('image/png');
+                const imageInfo = collectionId === 0 ? await result.getCoin(tokenId) : await result.getAnt(tokenId);
+                const imageBuffer = collectionId === 0 ? await createPicture(tokenId, parseFloat(ethers.utils.formatEther(imageInfo[0])).toString(), parseInt(imageInfo[1])) : await createAntPicture(imageInfo[0].map((partIndex) => parseInt(partIndex)));
+                storeImgInDb(netId, collectionId, tokenId, imageBuffer)
+                res.send(imageBuffer)
+            }
         } else {
-            res.contentType('image/png');
-            const imageInfo = collectionId === 0 ? await result.getCoin(tokenId) : await result.getAnt(tokenId);
-            const imageBuffer = collectionId === 0 ? await createPicture(tokenId, parseFloat(ethers.utils.formatEther(imageInfo[0])).toString(), parseInt(imageInfo[1])) : await createAntPicture(imageInfo[0].map((partIndex) => parseInt(partIndex)));
-            res.send(imageBuffer)
+            res.contentType('image/png')
+            res.send(dbResponse[0])
         }
     } catch(err) {
         next(err);
