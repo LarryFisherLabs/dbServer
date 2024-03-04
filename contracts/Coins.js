@@ -1,5 +1,4 @@
-{
-  "address": ["0xC65480c0FCB7f2BEf837aaB38800A10b7E38be94", "0x164fc781381EF05ea9983b8f23b565dfa41502a4"],
+export const Coins = {
   "abi": [
     {
       "inputs": [],

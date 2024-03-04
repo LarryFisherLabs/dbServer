@@ -1,5 +1,4 @@
-{
-  "address": ["0x85C995570E03051cA1E610E15e34abE2cFcA649D", "0x91DaDA74286e9CF287e536e2969FC14D034b85b0"],
+export const Ants = {
   "abi": [
     {
       "inputs": [

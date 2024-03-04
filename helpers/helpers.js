@@ -1,6 +1,9 @@
 import { Storage } from "@google-cloud/storage";
 import { staticLayerInfo } from "./antInfo.js";
 
+const _bucketNamePrefix = "bca-p000-"
+const _bucketVersionNames = ["og", "v0000"]
+
 export const convertFileName = (fileName) => {
     const fileNameArray = fileName.split("-");
     let name = "";
@@ -11,6 +14,7 @@ export const convertFileName = (fileName) => {
     return name;
 }
 
+// !!!!!!!!! TODO: remove localhost for full production deployment !!!!!!!!!
 const requestWhiteList = [
     'http://localhost:3000',
     'https://testants.vercel.app',
@@ -23,14 +27,14 @@ export const isOnWhiteList = (origin) => {
     else return false
 }
 
-export const getCoinDeets = (host, netId, tokenId, colorId, value, isAntDiscountUsed, owner) => {
+export const getCoinDeets = (host, netId, tokenId, colorId, value, isAntDiscountUsed, owner, versionId) => {
     if (host.includes('localhost')) host = 'http://' + host + ':3001'
     else host = 'https://' + host
     const antDiscount = isAntDiscountUsed ? 'Used' : 'Available'
     let coinDeets = {};
     coinDeets["owner"] = owner.toLowerCase()
     coinDeets["description"] = "This token represents membership in the bitcow arcade community. Each token offers a one time discount on every current and future NFT project released by the bitcow arcade team as well as additional perks in any games created by our team.";
-    coinDeets["image"] = host + "/images/" + netId + "/coins/" + tokenId;
+    coinDeets["image"] = host + "/coins/" + netId + "/" + versionId + "/images/" + tokenId;
     coinDeets["attributes"] = [];
     const color = colorId === 4 ? "Founder" : colorId === 1 ? "Silver" : colorId === 2 ? "Gold" : colorId === 3 ? "Diamond" : "Bronze";
     coinDeets["attributes"].push({
@@ -48,14 +52,14 @@ export const getCoinDeets = (host, netId, tokenId, colorId, value, isAntDiscount
     return coinDeets;
 }
 
-export const getAntDeets = (name, host, netId, tokenId, attributes, rarities, owner) => {
+export const getAntDeets = (name, host, netId, tokenId, attributes, rarities, owner, versionId) => {
     if (host.includes('localhost')) host = 'http://' + host + ':3001'
     else host = 'https://' + host
     let antDeets = {};
     antDeets["owner"] = owner.toLowerCase()
     antDeets["name"] = name;
     antDeets["description"] = "Ants will receive descriptions from creators based on traits over time.";
-    antDeets["image"] = host + "/images/" + netId + "/ants/" + tokenId;
+    antDeets["image"] = host + "/ants/" + netId + "/" + versionId + "/images/" + tokenId;
     antDeets["attributes"] = [];
     let rarityScore = 0;
     // i === layerLevel
@@ -84,39 +88,50 @@ export const getAntDeets = (name, host, netId, tokenId, attributes, rarities, ow
     return antDeets;
 }
 
-const getTokenPathInDb = (netId, tokenTypeId, tokenId) => {
+const getTokenPathInDb = (netId, tokenTypeId, tokenId, isData) => {
     let folderName = ''
     if (netId === 0) folderName += 'sepolia'
     else if (netId === 1) folderName += 'goerli'
     else return 'Wrong network!'
-    if (tokenTypeId === 0) folderName += '-coins-images/'
-    else if (tokenTypeId === 1) folderName += '-ants-images/'
+    if (tokenTypeId === 0) folderName += '-coins'
+    else if (tokenTypeId === 1) folderName += '-ants'
     else return 'Collection not found!'
-    return folderName + tokenId + '.png'
+    if (isData === true) folderName += ('-data/' + tokenId + '.json')
+    else if (isData === false) folderName += ('-images/' + tokenId + '.png')
+    else return 'Specify data or image!'
+    return folderName
 }
 
-export const getImgFromDb = async (netId, tokenTypeId, tokenId) => {
-    const tokenPath = getTokenPathInDb(netId, tokenTypeId, tokenId)
+const getBucketName = (versionId) => {
+    return (_bucketNamePrefix + _bucketVersionNames[versionId])
+}
+
+export const getFileFromDb = async (netId, tokenTypeId, tokenId, versionId, isData) => {
+    const tokenPath = getTokenPathInDb(netId, tokenTypeId, tokenId, isData)
+    if (tokenPath.includes('!')) return tokenPath
+    const bucketName = getBucketName(versionId)
 
     const storage = new Storage({
         keyFilename: 'key.json'
     })
-    const bucket = storage.bucket('ant-test-1')
+    const bucket = storage.bucket(bucketName)
     const tokenFile = bucket.file(tokenPath)
-    const isImgPres = await tokenFile.exists()
-    if (isImgPres[0] === true) return await tokenFile.download()
+    const isFilePres = await tokenFile.exists()
+    if (isFilePres[0] === true) return await tokenFile.download()
     else return 'Token not found!'
 }
 
-export const storeImgInDb = (netId, tokenTypeId, tokenId, imgBuffer) => {
-    const tokenPath = getTokenPathInDb(netId, tokenTypeId, tokenId)
+export const storeFileInDb = (netId, tokenTypeId, tokenId, dataToSave, versionId, isData) => {
+    const tokenPath = getTokenPathInDb(netId, tokenTypeId, tokenId, isData)
+    if (tokenPath.includes('!')) return tokenPath
+    const bucketName = getBucketName(versionId)
 
     const storage = new Storage({
         keyFilename: 'key.json'
     })
-    const bucket = storage.bucket('ant-test-1')
+    const bucket = storage.bucket(bucketName)
     const newFile = bucket.file(tokenPath)
-    newFile.save(imgBuffer, (err) => {
+    newFile.save(dataToSave, (err) => {
         if (!err) {
             console.log("cool")
         } else {

@@ -1,6 +1,8 @@
 import fs from "fs";
 import { ethers } from "ethers";
 import { isAddress } from "ethers/lib/utils.js";
+import { Coins } from "../contracts/Coins.js";
+import { Ants } from "../contracts/Ants.js";
 
 // !!! network ids !!!
 // 0 sepolia
@@ -22,20 +24,28 @@ const _readFile = async (filePath) => {
     }
 }
 
-// these will be set to strings in case of a bad request 
-const Ants = await _readFile("contracts/Ants.json")
-const Coins = await _readFile("contracts/Coins.json")
-
-const netDeets = [
-    {
-        name: "sepolia",
-        contracts: [Coins.address[0], Ants.address[0]]
+const contracts = {
+    coins: {
+        og: {
+            sepolia: "0xC65480c0FCB7f2BEf837aaB38800A10b7E38be94",
+            goerli: "0x164fc781381EF05ea9983b8f23b565dfa41502a4"
+        },
+        v0000: {
+            sepolia: "0x9bf33ef2f78b957709eaa8ab6dcd69e8833102aa",
+            goerli: "0xbc0cc29b4134f4c8a53ad70cAeE4D507cce94c2c"
+        }
     },
-    {
-        name: "goerli",
-        contracts: [Coins.address[1], Ants.address[1]]
+    ants: {
+        og: {
+            sepolia: "0x85C995570E03051cA1E610E15e34abE2cFcA649D",
+            goerli: "0x91DaDA74286e9CF287e536e2969FC14D034b85b0"
+        },
+        v0000: {
+            sepolia: "0xa177a0b2f52f75babf9d34386900bce3eb47b7a2",
+            goerli: "0x695d67BA37ab330F6E776f959aD2fD06fF3136D7"
+        }
     }
-];
+}
 
 export const _getAntCount = async (contract) => {
     return parseInt(await contract.COUNTER());
@@ -46,16 +56,30 @@ export const _getCoinCount = async (contract) => {
     return parseInt(counters[0]);
 }
 
-// string returned means bad request non-string(contract) means proceed
-export const getContract = async (networkId, contractId, tokenId, isIgnoringTokenId = false) => {
-    if (typeof Coins === "string" && contractId === 0) return Coins
-    else if (typeof Ants === "string" && contractId === 1) return Ants
-    else if (networkId !== 0 && networkId !== 1) return "Invalid network!"
+export const getContract = async (networkId, contractId, tokenId, versionId, isIgnoringTokenId = false) => {
+    if (networkId !== 0 && networkId !== 1) return "Invalid network!"
     else if (contractId !== 0 && contractId !== 1) return "Invalid contract/project id!"
+    else if (versionId !== 0 && versionId !== 1) return "Invalid version id!"
     else {
-        const provider = new ethers.providers.InfuraProvider(netDeets[networkId].name, process.env.INFURA_API_KEY);
-        const abi = contractId === 0 ? Coins.abi : Ants.abi;
-        const contract = new ethers.Contract(netDeets[networkId].contracts[contractId], abi, provider);
+        let netName, abi, contractAddy
+        if (contractId === 0) {
+            abi = Coins.abi
+            contractAddy = contracts.coins
+        } else {
+            abi = Ants.abi
+            contractAddy = contracts.ants
+        }
+        if (versionId === 0) contractAddy = contractAddy.og
+        else contractAddy = contractAddy.v0000
+        if (networkId === 0) {
+            netName = 'sepolia'
+            contractAddy = contractAddy.sepolia
+        } else {
+            netName = 'goerli'
+            contractAddy = contractAddy.goerli
+        }
+        const provider = new ethers.providers.InfuraProvider(netName, process.env.INFURA_API_KEY);
+        const contract = new ethers.Contract(contractAddy, abi, provider);
         if (isIgnoringTokenId) {
             return contract;
         }
