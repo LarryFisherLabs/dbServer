@@ -66,7 +66,7 @@ export const getContract = async (networkId, contractId, tokenId, versionId, isI
             abi = Coins.abi
             contractAddy = contracts.coins
         } else {
-            abi = Ants.abi
+            abi = Ants.abi[versionId]
             contractAddy = contracts.ants
         }
         if (versionId === 0) contractAddy = contractAddy.og

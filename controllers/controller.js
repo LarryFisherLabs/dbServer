@@ -73,13 +73,14 @@ export const getTokenMetadata = async (req, res, next) => {
             } else {
                 const tokenInfo = collectionId === 0 ? await result.getCoin(tokenId) : await result.getAnt(tokenId);
                 const tokenOwner = await result.ownerOf(tokenId)
+
                 if (collectionId === 0) {
                     // get coin detail from ant contract
                     const antContractResult = await getContract(netId, 1, null, versionId, true)
                     if (typeof antContractResult === "string") {
                         res.json({message: antContractResult});
                     } else {
-                        const isAntDiscountUsed = await antContractResult.isDiscountUsed(tokenId)
+                        const isAntDiscountUsed = (versionId === 0) ? await antContractResult.isDiscountUsed(tokenId) : await antContractResult.isDiscountUsedByCoin(tokenId)
                         const coinDeets = getCoinDeets(req.hostname, req.params.netId, req.params.id, parseInt(tokenInfo[1]), parseFloat(ethers.utils.formatEther(tokenInfo[0])).toString(), isAntDiscountUsed, tokenOwner, versionId);
                         res.json(coinDeets)
                     }

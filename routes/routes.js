@@ -15,7 +15,7 @@ export const router = express.Router();
 // passed: 0, in-project: 0, desc: og version
 // passed: 1, in-project: 1, desc: v0000
 
+router.get('/:tokenType/:netId/:version/count', getTokenCount);
 router.get('/:tokenType/:netId/:version/:id', getTokenMetadata);
 router.get('/:tokenType/:netId/:version/images/:id', getTokenImage);
-router.get('/:tokenType/:netId/:version/count', getTokenCount);
 router.get('/:tokenType/:netId/:version/token-ids-by-owner/:ownerAddress', getTokenIdsByOwner);
