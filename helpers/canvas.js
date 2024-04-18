@@ -55,28 +55,41 @@ export const createPicture = async (id, value, color) => {
 }
 
 const baseElements = [
-    'public/ants/base/6-ant-right-foreleg.png',
+    'public/ants/base/5-ant-right-foreleg.png',
     'public/ants/base/3-ant-head.png',
-    'public/ants/base/5-ant-thorax.png',
-    'public/ants/base/8-ant-abdomen.png',
+    'public/ants/base/4-ant-thorax.png',
+    'public/ants/base/6-ant-abdomen.png',
     'public/ants/base/1-ant-eyes.png', 
-    'public/ants/base/2-ant-mandibles.png', 
-    'public/ants/base/4-dog-tags.png',
-    'public/ants/base/7-holster.png'
+    'public/ants/base/2-ant-mandibles.png'
 ];
 
 export const createAntPicture = async (indexes) => {
     const canvas = createCanvas(450, 450);
     const ctx = canvas.getContext('2d');
+    const nvgId_ = 6
+    const reflectiveBeltId_ = 1
 
-    const fileNameArray = [[], [], [], [], [], []];
+    const fileNameArray = [[], [], [], [], [], [], [], [], []]
     indexes.forEach((selectedIndex, layerIndex) => {
-        const layer = staticLayerInfo[layerIndex];
-        if ((selectedIndex !== layer.defaultIndex) || selectedIndex > 0) {
-            fileNameArray[layer.elements[selectedIndex].layerLevel].push(`public/ants/${layer.fileName}/${layer.elements[selectedIndex].name}.png`);
+        const fileNameEnd = (
+            (
+                (layerIndex === 7) &&
+                (selectedIndex === reflectiveBeltId_) &&
+                staticLayerInfo[8].elements[indexes[8]].hasOwnProperty('hasSleeves')
+            ) || (
+                (layerIndex === 3) &&
+                (selectedIndex === nvgId_) &&
+                staticLayerInfo[1].elements[indexes[1]].name.includes('helm') &&
+                !(staticLayerInfo[1].elements[indexes[1]].name.includes('shrouded'))
+            )
+        ) ? '-alt.png' : '.png'
+        const isEmpty = staticLayerInfo[layerIndex].elements[selectedIndex].name === 'empty'
+        const layer = staticLayerInfo[layerIndex]
+        if (!isEmpty) {
+            fileNameArray[layer.elements[selectedIndex].layerLevel].push(`public/ants/${layer.fileName}/${layer.elements[selectedIndex].name}${fileNameEnd}`)
         }
     })
-    const orderedFileNames = [...fileNameArray[0], ...baseElements, ...fileNameArray[1], ...fileNameArray[2], ...fileNameArray[3], ...fileNameArray[4], ...fileNameArray[5]];
+    const orderedFileNames = [...fileNameArray[0], ...baseElements, ...fileNameArray[1], ...fileNameArray[2], ...fileNameArray[3], ...fileNameArray[4], ...fileNameArray[5], ...fileNameArray[6], ...fileNameArray[7], ...fileNameArray[8]];
     for (const fileName of orderedFileNames) {
         const image = await loadImage(fileName);
         ctx.imageSmoothingEnabled = false;
